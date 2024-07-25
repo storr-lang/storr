@@ -5,11 +5,8 @@ set(CMAKE_CXX_STANDARD 26)
 
 add_executable(storr src/main.cpp
         src/main.cpp
-        src/compiler/frontend/Token.cpp
-        src/compiler/frontend/Token.h
-        src/compiler/frontend/Lexer.cpp
-        src/compiler/frontend/Lexer.h
-        src/compiler/frontend/Parser.cpp
-        src/compiler/frontend/Parser.h
-        src/compiler/frontend/AST.cpp
-        src/compiler/frontend/AST.h)
+        src/Token.cpp
+        src/Token.h
+        src/Lexer.cpp
+        src/Lexer.h
+)
