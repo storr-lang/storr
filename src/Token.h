@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace Token {
+namespace lexer {
     class Token {
     public:
         enum class Type : size_t {
@@ -57,6 +57,7 @@ namespace Token {
             TOKEN_RSQB, // ]
             TOKEN_LCUB, // {
             TOKEN_RCUB, // }
+            TOKEN_NEWLINE, // \n
             operator_end,
 
             keyword_begin,

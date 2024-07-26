@@ -8,6 +8,7 @@
 #include "Lexer.h"
 #include "Token.h"
 
+using namespace lexer;
 
 int main() {
     std::string tokens[] = {
@@ -57,6 +58,7 @@ int main() {
         "TOKEN_RSQB", // ]
         "TOKEN_LCUB", // {
         "TOKEN_RCUB", // }
+        "TOKEN_NEWLINE", // \n
         "operator_end",
 
         "keyword_begin",
@@ -69,9 +71,9 @@ int main() {
     };
 
 
-    Token::Token token(Token::Token::Type::keyword_begin, "");
-    while (token.getType() != Token::Token::Type::TOKEN_EOF) {
-        token = Token::Lexer::getNextToken();
+    Token token(Token::Type::keyword_begin, "");
+    while (token.getType() != Token::Type::TOKEN_EOF) {
+        token = Lexer::getNextToken();
         std::string f = token.getValue();
         printf("token: %s\nvalue: %s\n\n", tokens[static_cast<int>(token.getType())].c_str(), f.c_str());
     };

@@ -5,11 +5,9 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "map"
-#include "string"
 #include "Token.h"
 
-namespace Token {
+namespace lexer {
     class Lexer {
     public:
         static Token getNextToken();

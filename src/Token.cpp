@@ -4,7 +4,7 @@
 
 #include "Token.h"
 
-namespace Token {
+namespace lexer {
     Token::Token(const Type type, const std::string &value) {
         this->type = type;
         this->value = value;

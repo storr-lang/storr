@@ -6,7 +6,7 @@
 #include "string"
 #include "Lexer.h"
 
-namespace Token {
+namespace lexer {
     std::map<std::string, Token::Type> stringLiterals = {
         {"True", Token::Type::TOKEN_BOOL},
         {"False", Token::Type::TOKEN_BOOL},
@@ -35,8 +35,16 @@ namespace Token {
 
     Token Lexer::getNextToken() {
         int lastChar = ' ';
-        while (isspace(lastChar)) {
+        while (isspace(lastChar) && lastChar != '\n') {
             lastChar = getchar();
+        };
+
+        if (lastChar == '\n') {
+            do {
+                lastChar = getchar();
+            } while (isspace(lastChar));
+            ungetc(lastChar, stdin);
+            return Token{Token::Type::TOKEN_NEWLINE, "\\n"};
         };
 
         if (isalpha(lastChar) || lastChar == '_') {
@@ -78,8 +86,9 @@ namespace Token {
             if (currentChar == '/') {
                 do {
                     lastChar = getchar();
-                } while (lastChar != EOF && lastChar != '\n' && lastChar != '\r');
-                return Token{Token::Type::TOKEN_COMMENT, ""};
+                } while (lastChar != EOF && lastChar != '\n');
+                ungetc(lastChar, stdin);
+                return Token{Token::Type::TOKEN_COMMENT, "comment"};
             };
             ungetc(currentChar, stdin);
             return Token{Token::Type::TOKEN_DIV, "/"};
