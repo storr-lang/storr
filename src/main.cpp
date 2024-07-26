@@ -48,6 +48,7 @@ int main() {
 
         "TOKEN_COMMA", // ,
         "TOKEN_COLON", // :
+        "TOKEN_ARROW", // ->
         "TOKEN_ELIPSIS", // ...
 
         "TOKEN_LPAREN", // (

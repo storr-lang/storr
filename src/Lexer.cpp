@@ -19,7 +19,6 @@ namespace Token {
 
     std::map<int, Token::Type> operatorChars = {
         {'+', Token::Type::TOKEN_ADD},
-        {'-', Token::Type::TOKEN_SUB},
         {'*', Token::Type::TOKEN_MUL},
         {'%', Token::Type::TOKEN_MOD},
         {'^', Token::Type::TOKEN_EXP},
@@ -134,6 +133,15 @@ namespace Token {
             };
             ungetc(currentChar, stdin);
             return Token{Token::Type::TOKEN_EQUALS, "="};
+        };
+
+        if (lastChar == '-') {
+            const int currentChar = getchar();
+            if (currentChar == '>') {
+                return Token{Token::Type::TOKEN_ARROW, "->"};
+            };
+            ungetc(currentChar, stdin);
+            return Token{Token::Type::TOKEN_SUB, "-"};
         };
 
         if (lastChar == '.') {
