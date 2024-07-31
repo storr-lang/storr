@@ -164,46 +164,42 @@ std::vector<Token> scan(const std::string &content) {
         std::string buffer;
         char c = content.at(i);
 
-        // end of file
-        if (i == content.length() - 1) {
-            tokens.push_back(Token{TokenType::EndOfFile, std::nullopt});
-            break;
-        }
-
         // ignore whitespace
-        if (isspace(c) && !std::string("\r\n").contains(c) && i != content.length() - 1) continue;
+        if (isspace(c) && !std::string("\r\n").contains(c)) continue;
 
         // line separator
         if (std::string("\r\n").contains(c)) {
-            do c = content.at(++i);
-            while (isspace(c) && i != content.length() - 1);
-            i--;
-
+            while (isspace(c) && i + 1 < content.length()) c = content.at(++i);
             tokens.push_back(Token{TokenType::LineSeparator, std::nullopt});
+            if (i == content.length() - 1) break;
+            i--;
             continue;
         }
 
         // comment
-        if (c == '/' && content.at(i + 1) == '/') {
-            do {
-                buffer.push_back(c);
+        if (c == '/' && i + 1 < content.length() && content.at(i + 1) == '/') {
+            buffer.push_back(c);
+            do{
                 c = content.at(++i);
-            } while (!std::string("\r\n").contains(c) && i != content.length() - 1);
-            i--;
-
+                buffer.push_back(c);
+            }while (!std::string("\r\n").contains(c) && i + 1 < content.length()) ;
+            if (std::string("\r\n").contains(buffer.back())) buffer.pop_back();
             tokens.push_back(Token{TokenType::Comment, buffer});
-
+            if (i == content.length() - 1) break;
+            i--;
             buffer.clear();
             continue;
         }
 
         // identifier
         if (c == '_' || isalpha(c)) {
-            do {
-                buffer.push_back(c);
+            buffer.push_back(c);
+            do{
                 c = content.at(++i);
-            } while (c == '_' || isalnum(c));
+                buffer.push_back(c);
+            } while ((c == '_' || isalnum(c)) && i + 1 < content.length()) ;
             i--;
+            buffer.pop_back();
 
             if (identifiers.contains(buffer)) tokens.push_back(Token{identifiers[buffer], buffer});
             else tokens.push_back(Token{TokenType::Identifier, buffer});
@@ -214,18 +210,21 @@ std::vector<Token> scan(const std::string &content) {
 
         // numbers
         if (isdigit(c)) {
+            buffer.push_back(c);
             int dot_count = 0;
             do {
-                buffer.push_back(c);
                 c = content.at(++i);
+                buffer.push_back(c);
+
 
                 if (c == '.') dot_count++;
                 if (dot_count > 1) {
                     tokens.push_back(Token{TokenType::Illegal, buffer});
                     break;
                 }
-            } while (isdigit(c) || c == '_' || c == '.');
+            }while ((isdigit(c) || c == '_' || c == '.') && i + 1 < content.length());
             i--;
+            buffer.pop_back();
 
             if (buffer.find('.') != std::string::npos) {
                 tokens.push_back(Token{TokenType::FloatingPoint, buffer});
@@ -243,11 +242,11 @@ std::vector<Token> scan(const std::string &content) {
         }
 
         // string
-        if (c == '"') {
+        if (c == '"' && i + 1 < content.length()) {
             do {
                 buffer.push_back(c);
                 c = content.at(++i);
-            } while (c != '"');
+            } while (c != '"' && i < content.length());
             buffer.push_back(c);
 
             tokens.push_back(Token{TokenType::String, buffer});
@@ -257,7 +256,7 @@ std::vector<Token> scan(const std::string &content) {
         }
 
         // operators and delimiters
-        if (c == ':') {
+        if (c == ':' && i + 1 < content.length()) {
             c = content.at(++i);
             if (c == '=') tokens.push_back(Token{TokenType::RAssign, ":="});
             else {
@@ -266,7 +265,7 @@ std::vector<Token> scan(const std::string &content) {
             }
             continue;
         }
-        if (c == '=') {
+        if (c == '=' && i + 1 < content.length()) {
             c = content.at(++i);
             switch (c) {
                 case ':':
@@ -282,7 +281,7 @@ std::vector<Token> scan(const std::string &content) {
             }
             continue;
         }
-        if (c == '!') {
+        if (c == '!' && i + 1 < content.length()) {
             c = content.at(++i);
             switch (c) {
                 case '=':
@@ -301,7 +300,7 @@ std::vector<Token> scan(const std::string &content) {
             }
             continue;
         }
-        if (c == '<') {
+        if (c == '<' && i + 1 < content.length()) {
             c = content.at(++i);
             if (c == '=') tokens.push_back(Token{TokenType::LTEquals, "<="});
             else {
@@ -310,7 +309,7 @@ std::vector<Token> scan(const std::string &content) {
             }
             continue;
         }
-        if (c == '>') {
+        if (c == '>' && i + 1 < content.length()) {
             c = content.at(++i);
             if (c == '=')tokens.push_back(Token{TokenType::GTEquals, ">="});
             else {
@@ -319,7 +318,7 @@ std::vector<Token> scan(const std::string &content) {
             }
             continue;
         }
-        if (c == '-') {
+        if (c == '-' && i + 1 < content.length()) {
             c = content.at(++i);
             if (c == '>') tokens.push_back(Token{TokenType::Maplet, "->"});
             else {
@@ -328,9 +327,12 @@ std::vector<Token> scan(const std::string &content) {
             }
             continue;
         }
-        if (c == '.') {
+        if (c == '.' && i + 1 < content.length()) {
             c = content.at(++i);
-            if (c == '.' && content.at(++i) == '.') tokens.push_back(Token{TokenType::Ellipsis, "..."});
+            if (c == '.' && i + 1 < content.length() && content.at(++i) == '.')
+                tokens.push_back(Token{
+                    TokenType::Ellipsis, "..."
+                });
             else {
                 tokens.push_back(Token{TokenType::Illegal, std::nullopt});
                 break;
@@ -347,6 +349,7 @@ std::vector<Token> scan(const std::string &content) {
         tokens.push_back(Token{TokenType::Illegal, buffer});
         break;
     }
+    tokens.push_back(Token{TokenType::EndOfFile, std::nullopt});
     return tokens;
 }
 
