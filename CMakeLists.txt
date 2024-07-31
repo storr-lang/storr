@@ -3,4 +3,7 @@ project(storr)
 
 set(CMAKE_CXX_STANDARD 26)
 
-add_executable(storr src/main.cpp)
+add_executable(storr src/main.cpp
+        src/Lexer.cpp
+        src/Lexer.h
+)
