@@ -16,7 +16,7 @@ enum class TokenType : uint_fast8_t {
     FloatingPoint, // ([\d][_\d]*\.[\d][_\d]*|Infinity|NaN)
     Boolean, // (True|False)
     Character, // '.' unimplemented
-    String, // ".*" unimplemented
+    String, // ".*"
 
     Add, // +
     Subtract, // -
@@ -229,9 +229,18 @@ std::vector<Token> Lexer::scan() {
         }
 
         // string
-        // unimplemented
         if (c == '"') {
-            tokens.push_back(Token{TokenType::Illegal, "\""});
+            buffer.push_back(c);
+            while (peek().has_value() && peek().value() != '"' && !std::string("\r\n").contains(peek().value())) {
+                buffer.push_back(dequeue());
+            }
+            if (peek().has_value()) {
+                buffer.push_back(dequeue());
+                tokens.push_back(Token{TokenType::String, buffer});
+            } else {
+                tokens.push_back(Token{TokenType::Illegal, buffer});
+            }
+            buffer.clear();
             continue;
         }
 
