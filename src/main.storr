@@ -1,12 +1,12 @@
-main := fib(16) // 987
-
 /// ## Notes
 ///
 /// `fib(0) = 0`, `fib(1) = 1`, and `fib(n) = fib(n - 1) + fib(n - 2)` where `n > 1`.\
 /// `fib(n) = 0` where `n < 0`.
 ///
-fib(n : Int) : Int := _fib(n, 0, 0, 1, 0 < n) // tail-recursive helper function
+fib(n) := _fib(n, 0, 0, 1, 0 < n) // tail-recursive helper function
 _fib(n, i, a, b, p) := {
-    _, _, _, _, True => a,
-    n, i, a, b, _    => _fib(n, i + 1, b, a + b, i + 1 < n),
+	n, i, a, b, False => _fib(n, i + 1, b, a + b, i + 1 < n)
+	_, _, a, _, _     => a
 }
+
+main := fib(16) // 987

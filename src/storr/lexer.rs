@@ -24,9 +24,19 @@ impl Lexer {
             self.ignore_whitespace();
             let c = self.consume();
 
+            if c == '\n' {
+                self.push(TokenType::LineFeed, ' '.to_string());
+                self.line += 1;
+                self.column = 0;
+                continue;
+            }
+
             if c.is_alphabetic() || c == '_' {
                 let mut lexeme = c.to_string();
-                while self.peek(0).is_alphanumeric() || self.peek(0) == '_' {
+                while self.peek(0).is_digit(10)
+                    || self.peek(0).is_alphanumeric()
+                    || self.peek(0) == '_'
+                {
                     lexeme.push(self.consume());
                 }
                 match lexeme.as_str() {
@@ -147,7 +157,6 @@ impl Lexer {
                         self.push(TokenType::Illegal, c.to_string());
                     }
                 }
-                '\0' => break,
                 _ => self.push(TokenType::Illegal, c.to_string()),
             }
         }
@@ -155,8 +164,9 @@ impl Lexer {
     }
 
     fn push(&mut self, token_type: TokenType, lexeme: String) {
+        let column = self.column - lexeme.len() + 1;
         self.tokens
-            .push(Token::new(token_type, lexeme, self.line, self.column));
+            .push(Token::new(token_type, lexeme, self.line, column));
     }
 
     fn peek(&self, offset: usize) -> char {
@@ -171,11 +181,8 @@ impl Lexer {
     }
 
     fn ignore_whitespace(&mut self) {
-        while self.peek(0).is_whitespace() {
-            if self.consume() == '\n' {
-                self.line += 1;
-                self.column = 0;
-            }
+        while self.peek(0).is_whitespace() && self.peek(0) != '\n' {
+            self.consume();
         }
     }
 }

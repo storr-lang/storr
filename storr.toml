@@ -1,0 +1,5 @@
+entry_point = "src/main.rs"
+
+[dependencies]
+
+[dependencies.dev]

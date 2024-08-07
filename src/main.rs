@@ -9,7 +9,8 @@ macro_rules! run {
     ($source:expr) => {{
         let mut lexer = Lexer::new($source.to_string());
         lexer.scan();
-        for token in lexer.tokens {
+        let tokens = lexer.tokens;
+        for token in &tokens {
             println!("{}", token.to_string());
         }
     }};

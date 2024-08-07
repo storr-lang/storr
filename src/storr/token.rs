@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum TokenType {
     Identifier,    // /\w+/
     Integer,       // /([+-]?\d+)/
@@ -41,11 +42,11 @@ pub enum TokenType {
     Colon,    // :
     Comma,    // ,
     Ellipsis, // ...
+    LineFeed, // \n
 
     Illegal,
     EOF,
 }
-
 impl TokenType {
     pub fn to_string(&self) -> String {
         match self {
@@ -83,6 +84,7 @@ impl TokenType {
             TokenType::Colon => "Colon",
             TokenType::Comma => "Comma",
             TokenType::Ellipsis => "Ellipsis",
+            TokenType::LineFeed => "LineFeed",
             TokenType::Illegal => "Illegal",
             TokenType::EOF => "EOF",
         }
@@ -90,13 +92,13 @@ impl TokenType {
     }
 }
 
+#[derive(Debug)]
 pub struct Token {
-    token_type: TokenType,
-    lexeme: String,
+    pub token_type: TokenType,
+    pub lexeme: String,
     line: usize,
     column: usize,
 }
-
 impl Token {
     pub fn new(token_type: TokenType, lexeme: String, line: usize, column: usize) -> Token {
         Token {
@@ -111,9 +113,26 @@ impl Token {
         format!(
             "{:>4}:{:<5}{:<17}{}",
             self.line,
-            self.column - self.lexeme.len() + 1,
+            self.column,
             self.token_type.to_string(),
             self.lexeme,
         )
+    }
+
+    pub fn get_precedence(&self) -> i32 {
+        match self.token_type {
+            TokenType::Or => 1,
+            TokenType::And => 2,
+            TokenType::Equal
+            | TokenType::NotEqual
+            | TokenType::LessThan
+            | TokenType::GreaterThan
+            | TokenType::LessThanEqual
+            | TokenType::GreaterThanEqual => 3,
+            TokenType::Plus | TokenType::Minus => 4,
+            TokenType::Asterisk | TokenType::Slash | TokenType::Percent => 5,
+            TokenType::Caret => 6,
+            _ => 0,
+        }
     }
 }
