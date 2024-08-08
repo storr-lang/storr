@@ -1,82 +1,92 @@
 /// BNF Grammar:
 ///
-/// <program>    ::= <statement>* "\0"
+/// ```bnf
+/// <program>         ::= <statement>* "\0"
 ///
-/// <statement>  ::= <assignment> "\n"
+/// <statement>       ::= <assignment> "\n"
 ///
-/// <assignment> ::= <identifier> <parameters> ":=" <expression>
+/// <assignment>      ::= <function> ["(" <parameters> ")"] ":=" <expression>
 ///
-/// <identifier> ::= String
+/// <function>        ::= String
 ///
-/// <parameters> ::= <identifier> ("," <identifier>)*
+/// <parameters>      ::= <parameter> ("," <parameter>)*
 ///
-/// <expression> ::= <literal>
-///                | <binary>
-///                | <unary>
-///                | <call>
-///                | <match>
-///                | "(" <expression> ")"
-///                | "[" <expression> "]"
-///                | "{" <expression> "}"
+/// <parameter>       ::= String
 ///
-/// <literal>    ::= <identifier> | Integer | FloatingPoint | Boolean | Nothing
+/// <expression>      ::= <literal>
+///                     | <binary>
+///                     | <unary>
+///                     | <call>
+///                     | <match>
+///                     | "(" <expression> ")"
+///                     | "[" <expression> "]"
+///                     | "{" <expression> "}"
 ///
-/// <identifier> ::= String
+/// <literal>         ::= <variable> | <integer> | <floating point> | <boolean> | Nothing
 ///
-/// <binary>     ::= <expression> <binary operator> <expression>
+/// <variable>        ::= String
 ///
-/// <binary operator> ::= "+" | "-" | "*" | "/" | "%" | "^" | "=" | "!=" | "<" | ">" | "<=" | ">=" | "&" | "|" | "!&" | "!|"
+/// <integer>         ::= i64
 ///
-/// <unary>      ::= <unary operator> <expression>
+/// <floating point>  ::= f64
 ///
-/// <unary operator> ::= "-" | "!"
+/// <boolean>         ::= bool
 ///
-/// <call>       ::= <identifier> <arguments>
+/// <binary>          ::= <left> <binary operator> <right>
 ///
-/// <arguments>  ::= <expression> ("," <expression>)*
+/// <left>            ::= <expression>
 ///
-/// <match>      ::= "{" <cases> "}"
+/// <binary operator> ::= "+"
+///                     | "-"
+///                     | "*"
+///                     | "/"
+///                     | "%"
+///                     | "^"
+///                     | "="
+///                     | "!="
+///                     | "<"
+///                     | ">"
+///                     | "<="
+///                     | ">="
+///                     | "&"
+///                     | "|"
+///                     | "!&"
+///                     | "!|"
 ///
-/// <cases>      ::= <case> ("," <case>)*
+/// <right>           ::= <expression>
 ///
-/// <case>       ::= <pattern> "=>" <expression>
+/// <unary>           ::= <unary operator> <operand>
 ///
-/// <pattern>    ::= <literal> ("," <literal>)*
+/// <unary operator>  ::= "-" | "!"
+///
+/// <operand>         ::= <expression>
+///
+/// <call>            ::= <function> "(" <arguments> ")"
+///
+/// <arguments>       ::= <argument> ("," <argument>)*
+///
+/// <argument>        ::= <expression>
+///
+/// <match>           ::= "{" <cases> "}"
+///
+/// <cases>           ::= <case> ("," <case>)*
+///
+/// <case>            ::= <pattern> "=>" <expression>
+///
+/// <pattern>         ::= <literal> ("," <literal>)*
+/// ```
 ///
 
 pub struct Program {
     pub statements: Vec<Statement>,
 }
-impl Program {
-    pub fn to_string(&self) -> String {
-        self.statements
-            .iter()
-            .map(|stmt| stmt.to_string())
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-}
 
 pub enum Statement {
     Assignment {
-        identifier: String,
+        function: String,
         parameters: Vec<String>,
         expression: Expression,
     },
-}
-impl Statement {
-    pub fn to_string(&self) -> String {
-        match self {
-            Statement::Assignment {
-                identifier,
-                parameters,
-                expression,
-            } => {
-                let params = parameters.join(", ");
-                format!("{}({}) := {}", identifier, params, expression.to_string())
-            }
-        }
-    }
 }
 
 pub enum Expression {
@@ -91,86 +101,20 @@ pub enum Expression {
         operand: Box<Expression>,
     },
     Call {
-        identifier: String,
+        function: String,
         arguments: Vec<Expression>,
     },
     Match {
         cases: Vec<Case>,
     },
 }
-impl Expression {
-    pub fn to_string(&self) -> String {
-        match self {
-            Expression::Literal(l) => l.to_string(),
-            Expression::Binary {
-                left,
-                operator,
-                right,
-            } => format!(
-                "({} {} {})",
-                left.to_string(),
-                operator.to_string(),
-                right.to_string()
-            ),
-            Expression::Unary { operator, operand } => {
-                format!("({} {})", operator.to_string(), operand.to_string())
-            }
-            Expression::Call {
-                identifier,
-                arguments,
-            } => {
-                let args = arguments
-                    .iter()
-                    .map(|arg| arg.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                format!("{}({})", identifier, args)
-            }
-            Expression::Match { cases } => {
-                let cases_str = cases
-                    .iter()
-                    .map(|case| case.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                format!("{{ {} }}", cases_str)
-            }
-        }
-    }
-}
 
 pub enum Literal {
-    Identifier(String),
+    Variable(String),
     Integer(i64),
     FloatingPoint(f64),
     Boolean(bool),
     Nothing,
-}
-impl Literal {
-    pub fn to_string(&self) -> String {
-        match self {
-            Literal::Identifier(s) => s.to_string(),
-            Literal::Integer(i) => i.to_string(),
-            Literal::FloatingPoint(f) => f.to_string(),
-            Literal::Boolean(b) => b.to_string(),
-            Literal::Nothing => "Nothing".to_string(),
-        }
-    }
-}
-
-pub struct Case {
-    pub pattern: Vec<Literal>,
-    pub expression: Expression,
-}
-impl Case {
-    pub fn to_string(&self) -> String {
-        let pattern = self
-            .pattern
-            .iter()
-            .map(|lit| lit.to_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!("{} => {}", pattern, self.expression.to_string())
-    }
 }
 
 pub enum BinaryOperator {
@@ -191,38 +135,13 @@ pub enum BinaryOperator {
     NotAnd,
     NotOr,
 }
-impl BinaryOperator {
-    pub fn to_string(&self) -> String {
-        match self {
-            BinaryOperator::Plus => "+".to_string(),
-            BinaryOperator::Minus => "-".to_string(),
-            BinaryOperator::Asterisk => "*".to_string(),
-            BinaryOperator::Slash => "/".to_string(),
-            BinaryOperator::Percent => "%".to_string(),
-            BinaryOperator::Caret => "^".to_string(),
-            BinaryOperator::Equal => "=".to_string(),
-            BinaryOperator::NotEqual => "!=".to_string(),
-            BinaryOperator::LessThan => "<".to_string(),
-            BinaryOperator::GreaterThan => ">".to_string(),
-            BinaryOperator::LessThanEqual => "<=".to_string(),
-            BinaryOperator::GreaterThanEqual => ">=".to_string(),
-            BinaryOperator::And => "&".to_string(),
-            BinaryOperator::Or => "|".to_string(),
-            BinaryOperator::NotAnd => "!&".to_string(),
-            BinaryOperator::NotOr => "!|".to_string(),
-        }
-    }
-}
 
 pub enum UnaryOperator {
     Minus,
     Not,
 }
-impl UnaryOperator {
-    pub fn to_string(&self) -> String {
-        match self {
-            UnaryOperator::Minus => "-".to_string(),
-            UnaryOperator::Not => "!".to_string(),
-        }
-    }
+
+pub struct Case {
+    pattern: Vec<Literal>,
+    expression: Expression,
 }

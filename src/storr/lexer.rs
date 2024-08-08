@@ -1,4 +1,5 @@
 use super::token::{Token, TokenType};
+use std::cmp::PartialEq;
 
 pub struct Lexer {
     pub tokens: Vec<Token>,
@@ -7,12 +8,55 @@ pub struct Lexer {
     line: usize,
     column: usize,
 }
-
+impl PartialEq for TokenType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (TokenType::Integer, TokenType::Integer) => true,
+            (TokenType::FloatingPoint, TokenType::FloatingPoint) => true,
+            (TokenType::Boolean, TokenType::Boolean) => true,
+            (TokenType::Nothing, TokenType::Nothing) => true,
+            (TokenType::Identifier, TokenType::Identifier) => true,
+            (TokenType::Plus, TokenType::Plus) => true,
+            (TokenType::Minus, TokenType::Minus) => true,
+            (TokenType::Asterisk, TokenType::Asterisk) => true,
+            (TokenType::Slash, TokenType::Slash) => true,
+            (TokenType::Percent, TokenType::Percent) => true,
+            (TokenType::Caret, TokenType::Caret) => true,
+            (TokenType::Equal, TokenType::Equal) => true,
+            (TokenType::Assign, TokenType::Assign) => true,
+            (TokenType::NotEqual, TokenType::NotEqual) => true,
+            (TokenType::LessThan, TokenType::LessThan) => true,
+            (TokenType::GreaterThan, TokenType::GreaterThan) => true,
+            (TokenType::LessThanEqual, TokenType::LessThanEqual) => true,
+            (TokenType::GreaterThanEqual, TokenType::GreaterThanEqual) => true,
+            (TokenType::Not, TokenType::Not) => true,
+            (TokenType::And, TokenType::And) => true,
+            (TokenType::Or, TokenType::Or) => true,
+            (TokenType::NotAnd, TokenType::NotAnd) => true,
+            (TokenType::NotOr, TokenType::NotOr) => true,
+            (TokenType::Implies, TokenType::Implies) => true,
+            (TokenType::Maplet, TokenType::Maplet) => true,
+            (TokenType::LeftParenthesis, TokenType::LeftParenthesis) => true,
+            (TokenType::RightParenthesis, TokenType::RightParenthesis) => true,
+            (TokenType::LeftBracket, TokenType::LeftBracket) => true,
+            (TokenType::RightBracket, TokenType::RightBracket) => true,
+            (TokenType::LeftBrace, TokenType::LeftBrace) => true,
+            (TokenType::RightBrace, TokenType::RightBrace) => true,
+            (TokenType::Colon, TokenType::Colon) => true,
+            (TokenType::Comma, TokenType::Comma) => true,
+            (TokenType::Ellipsis, TokenType::Ellipsis) => true,
+            (TokenType::LineFeed, TokenType::LineFeed) => true,
+            (TokenType::Illegal, TokenType::Illegal) => true,
+            (TokenType::EOF, TokenType::EOF) => true,
+            _ => false,
+        }
+    }
+}
 impl Lexer {
     pub fn new(source: String) -> Lexer {
         Lexer {
-            source,
             tokens: Vec::new(),
+            source,
             index: 0,
             line: 1,
             column: 0,
@@ -161,12 +205,81 @@ impl Lexer {
             }
         }
         self.push(TokenType::EOF, "".to_string());
+        self.post_process();
     }
 
     fn push(&mut self, token_type: TokenType, lexeme: String) {
         let column = self.column - lexeme.len() + 1;
         self.tokens
             .push(Token::new(token_type, lexeme, self.line, column));
+    }
+
+    fn post_process(&mut self) {
+        let mut i = 0;
+        while i < self.tokens.len() - 1 {
+            if self.tokens[i].token_type == TokenType::Illegal {
+                panic!( // TODO: make clickable
+                    "Illegal token '{}' at {}:{}",
+                    self.tokens[i].lexeme, self.tokens[i].line, self.tokens[i].column
+                );
+            }
+            i += 1;
+        }
+
+        if self.tokens[self.tokens.len() - 2].token_type != TokenType::LineFeed {
+            self.tokens.pop();
+            self.column += 1;
+            self.push(TokenType::LineFeed, " ".to_string());
+            self.line += 1;
+            self.column = 0;
+            self.push(TokenType::EOF, "".to_string());
+        }
+
+        let mut i = 0;
+        while i < self.tokens.len() - 1 {
+            if self.tokens[i].token_type == TokenType::LineFeed
+                && self.tokens[i + 1].token_type == TokenType::LineFeed
+            {
+                self.tokens.remove(i + 1);
+            } else {
+                i += 1;
+            }
+        }
+
+        if self.tokens[0].token_type == TokenType::LineFeed {
+            self.tokens.remove(0);
+        }
+
+        let mut i = 0;
+        while i < self.tokens.len() - 1 {
+            match self.tokens[i].token_type {
+                TokenType::LeftParenthesis
+                | TokenType::LeftBracket
+                | TokenType::LeftBrace
+                | TokenType::Comma => {
+                    if self.tokens[i + 1].token_type == TokenType::LineFeed {
+                        self.tokens.remove(i + 1);
+                    }
+                }
+                _ => {},
+            }
+            i += 1;
+        }
+
+        let mut i = 0;
+        while i < self.tokens.len() - 1 {
+            if self.tokens[i].token_type == TokenType::Comma {
+                match self.tokens[i + 1].token_type {
+                    TokenType::RightParenthesis
+                    | TokenType::RightBracket
+                    | TokenType::RightBrace => {
+                        self.tokens.remove(i);
+                    }
+                    _ => {},
+                }
+            }
+            i += 1;
+        }
     }
 
     fn peek(&self, offset: usize) -> char {

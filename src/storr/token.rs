@@ -96,8 +96,8 @@ impl TokenType {
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
-    line: usize,
-    column: usize,
+    pub line: usize,
+    pub column: usize,
 }
 impl Token {
     pub fn new(token_type: TokenType, lexeme: String, line: usize, column: usize) -> Token {
@@ -111,7 +111,7 @@ impl Token {
 
     pub fn to_string(&self) -> String {
         format!(
-            "{:>4}:{:<5}{:<17}{}",
+            "{:>3}:{:<3}{:<17}{}",
             self.line,
             self.column,
             self.token_type.to_string(),

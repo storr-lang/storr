@@ -13,6 +13,7 @@ macro_rules! run {
         for token in &tokens {
             println!("{}", token.to_string());
         }
+
     }};
 }
 
@@ -24,7 +25,8 @@ fn main() {
         return;
     }
 
-    match fs::read_to_string(&args[1]) {
+    let path = &args[1];
+    match fs::read_to_string(path) {
         Err(e) => println!("Error: {}", e),
         Ok(source) => run!(&source),
     }
